@@ -24,12 +24,12 @@ jobs:
       # 3. Build Docker image
       - name: Build image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/python-api:${{ github.sha }} .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}chancellor4/python-api:${{ github.sha }} .
 
       # 4. Push image
       - name: Push image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/python-api:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}chancellor4/python-api:${{ github.sha }}
 
       # 5. Update Helm values.yaml with new image tag
       - name: Update Helm values
