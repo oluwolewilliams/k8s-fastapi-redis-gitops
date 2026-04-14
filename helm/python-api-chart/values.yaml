@@ -1,0 +1,41 @@
+replicaCount: 1
+
+image:
+  repository: python-api
+  tag: latest
+  pullPolicy: Never
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+redis:
+  image: redis:7
+  servicePort: 6379
+  pvc:
+    enabled: true
+    size: 1Gi
+  auth:
+    enabled: false
+    password: redis-123
+
+config:
+  redisHost: redis
+  redisPort: "6379"
+
+debugPod:
+  enabled: true
+  image: curlimages/curl:8.7.1
+  command:
+    - sleep
+    - "3600"
+
+ingress:
+  enabled: true
+  className: nginx
+  host: localhost
+  path: /api/?(.*)
+  pathType: ImplementationSpecific
+  rewriteTarget: /$1
+  useRegex: "true"

@@ -1,0 +1,15 @@
+1. Your FastAPI service has been deployed.
+
+2. If ingress-nginx is installed and ready, test with:
+
+   curl http://localhost/api
+
+3. To test inside the cluster:
+
+   kubectl exec -it debug-client -- curl http://python-api
+
+4. To inspect resources:
+
+   kubectl get pods
+   kubectl get svc
+   kubectl get ingress

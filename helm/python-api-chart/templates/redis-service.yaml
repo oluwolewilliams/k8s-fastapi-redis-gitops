@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    {{- include "python-api-chart.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image }}
+          {{- if .Values.redis.auth.enabled }}
+          args:
+            - redis-server
+            - --requirepass
+            - {{ .Values.redis.auth.password | quote }}
+          {{- end }}
+          ports:
+            - containerPort: 6379
+          {{- if .Values.redis.pvc.enabled }}
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+          {{- end }}
+      {{- if .Values.redis.pvc.enabled }}
+      volumes:
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc
+      {{- end }}

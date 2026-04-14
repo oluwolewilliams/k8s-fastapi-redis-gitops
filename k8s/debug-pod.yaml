@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-client
+spec:
+  containers:
+    - name: debug-client
+      image: curlimages/curl:8.7.1
+      command: ["sleep", "3600"]
+  restartPolicy: Never
