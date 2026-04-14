@@ -1,0 +1,202 @@
+---
+# Source: python-api-chart/templates/redis-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-cm
+  labels:
+    app.kubernetes.io/name: python-api-chart
+    app.kubernetes.io/instance: my-python-api
+data:
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+---
+# Source: python-api-chart/templates/redis-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  labels:
+    app.kubernetes.io/name: python-api-chart
+    app.kubernetes.io/instance: my-python-api
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Source: python-api-chart/templates/debug-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-client
+  labels:
+    app.kubernetes.io/name: python-api-chart
+    app.kubernetes.io/instance: my-python-api
+spec:
+  containers:
+    - name: debug-client
+      image: curlimages/curl:8.7.1
+      command:
+        - sleep
+        - "3600"
+  restartPolicy: Never
+---
+# Source: python-api-chart/templates/ingress.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-client
+  labels:
+    app.kubernetes.io/name: python-api-chart
+    app.kubernetes.io/instance: my-python-api
+spec:
+  containers:
+    - name: debug-client
+      image: curlimages/curl:8.7.1
+      command:
+        - sleep
+        - "3600"
+  restartPolicy: Never
+---
+# Source: python-api-chart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-api
+  labels:
+    app.kubernetes.io/name: python-api-chart
+    app.kubernetes.io/instance: my-python-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: python-api
+  template:
+    metadata:
+      labels:
+        app: python-api
+    spec:
+      containers:
+        - name: python-api
+          image: "python-api:latest"
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: redis-cm
+---
+# Source: python-api-chart/templates/redis-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app.kubernetes.io/name: python-api-chart
+    app.kubernetes.io/instance: my-python-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+      volumes:
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc
+---
+# Source: python-api-chart/templates/redis-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app.kubernetes.io/name: python-api-chart
+    app.kubernetes.io/instance: my-python-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+      volumes:
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc
+---
+# Source: python-api-chart/templates/service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-api
+  labels:
+    app.kubernetes.io/name: python-api-chart
+    app.kubernetes.io/instance: my-python-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: python-api
+  template:
+    metadata:
+      labels:
+        app: python-api
+    spec:
+      containers:
+        - name: python-api
+          image: "python-api:latest"
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: redis-cm
+---
+# Source: python-api-chart/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: my-python-api
+  labels:
+    app.kubernetes.io/name: python-api-chart
+    app.kubernetes.io/instance: my-python-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: my-python-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
