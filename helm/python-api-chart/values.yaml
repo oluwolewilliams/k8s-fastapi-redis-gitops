@@ -39,3 +39,9 @@ ingress:
   pathType: ImplementationSpecific
   rewriteTarget: /$1
   useRegex: "true"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
