@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: python-api
+  repository: chancellor4/python-api
   tag: latest
   pullPolicy: Never
 
