@@ -1,9 +1,10 @@
 replicaCount: 3
 
 image:
-  repository: chancellor4/python-api
+  repository: 123456789012.dkr.ecr.eu-west-2.amazonaws.com/chancellor4/python-api
+
   tag: latest
-  pullPolicy: Never
+  pullPolicy: always
 
 service:
   type: ClusterIP

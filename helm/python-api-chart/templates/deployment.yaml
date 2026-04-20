@@ -2,10 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: python-api
-  labels:
-    {{- include "python-api-chart.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
       app: python-api
@@ -14,16 +12,14 @@ spec:
       labels:
         app: python-api
     spec:
+      imagePullSecrets:
+        - name: ecr-secret
       containers:
         - name: python-api
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.service.targetPort }}
+            - containerPort: 8000
           envFrom:
             - configMapRef:
                 name: redis-cm
-            {{- if .Values.redis.auth.enabled }}
-            - secretRef:
-                name: redis-secret
-            {{- end }}
