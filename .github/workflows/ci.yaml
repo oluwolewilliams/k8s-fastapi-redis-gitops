@@ -17,11 +17,21 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
-      # 1. Checkout repo
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Configure AWS credentials
+      - name: Validate AWS secrets
+        run: |
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+            echo "AWS_ACCESS_KEY_ID secret is missing"
+            exit 1
+          fi
+          if [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+            echo "AWS_SECRET_ACCESS_KEY secret is missing"
+            exit 1
+          fi
+          echo "AWS secrets are present"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -29,29 +39,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # 3. Login to ECR
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 4. Build Docker image
       - name: Build image
         run: |
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
 
-      # 5. Push image to ECR
       - name: Push image
         run: |
           docker push $ECR_REPOSITORY:$IMAGE_TAG
 
-      # 6. Update Helm values.yaml
       - name: Update Helm values
         run: |
           sed -i 's|repository:.*|repository: '"$ECR_REPOSITORY"'|' helm/python-api-chart/values.yaml
           sed -i 's|tag:.*|tag: "'"$IMAGE_TAG"'"|' helm/python-api-chart/values.yaml
           sed -i 's|pullPolicy:.*|pullPolicy: Always|' helm/python-api-chart/values.yaml
 
-      # 7. Commit changes back to repo
       - name: Commit Helm image update
         run: |
           git config user.name "github-actions"
